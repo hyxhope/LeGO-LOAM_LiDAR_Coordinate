@@ -1,0 +1,38 @@
+<launch>
+    
+    <!--- Sim Time -->
+    <param name="/use_sim_time" value="true" />
+
+    <!--- voxel filter params -->
+    <!--- 0.4 - outdoor, 0.1 - indoor -->
+    <param name="mapping_leaf_size" type="double" value="0.2" />
+
+
+    <!--- Run Rviz-->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find lego_loam)/launch/test.rviz" />
+
+    <!--- TF -->
+    <node pkg="tf" type="static_transform_publisher" name="camera_init_to_map"  args="0 0 0 1.570795   0        1.570795 /map    /camera_init 10" />
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_camera" args="0 0 0 -1.570795 -1.570795 0        /camera /base_link   10" />
+
+    <!--- LeGO-LOAM -->    
+    <node pkg="lego_loam" type="imageProjection"    name="imageProjection"    output="screen"/>
+    <node pkg="lego_loam" type="featureAssociation" name="featureAssociation" output="screen"/>
+    <node pkg="lego_loam" type="mapOptmization"     name="mapOptmization"     output="screen"/>
+    <node pkg="lego_loam" type="transformFusion"    name="transformFusion"    output="screen"/>
+
+
+    <arg name="dst_directory" default="/tmp/odometry"/>
+    <arg name="points_topic" default="/velodyne_points"/>
+    <arg name="odom_topic" default="/integrated_to_init"/>
+    <arg name="endpoint_frame" default="base_link"/>
+    <arg name="origin_frame" default="map"/>
+    <node pkg="lego_loam" type="odometrySaver"      name="odometrySaver"    output="screen">
+        <param name="dst_directory" value="$(arg dst_directory)"/>
+        <param name="origin_frame" value="$(arg origin_frame)"/>
+        <param name="endpoint_frame" value="$(arg endpoint_frame)"/>
+        <remap from="/points" to="$(arg points_topic)"/>
+        <remap from="/odom" to="$(arg odom_topic)"/>
+    </node>
+
+</launch>
